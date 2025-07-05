@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %} 
+
+{% block content %}
+<style>
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination-links a,
+.pagination-box a {
+  padding: 8px 12px;
+  margin: 0 5px;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  color: #333;
+}
+
+.pagination-links .current-page {
+  margin: 0 10px;
+  font-weight: bold;
+}
+
+.pagination-box a {
+  background-color: #fff;
+}
+
+.pagination-box a.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.pagination-links a:hover,
+.pagination-box a:hover {
+  background-color: #eee;
+}
+</style>
+  <div class="container-fluid mt-1">
+
+    <div class="pagination-container mb-4 d-flex justify-content-center">
+      <span class="pagination-links">
+        {% if status_list.has_previous %}
+          <a href="?page=1">&laquo; first</a>
+          <a href="?page={{ status_list.previous_page_number }}">previous</a>
+        {% endif %}
+      
+        <span class="current-page">
+          Halaman {{ status_list.number }} dari {{ status_list.paginator.num_pages }}.
+        </span>
+      
+        {% if status_list.has_next %}
+          <a href="?page={{ status_list.next_page_number }}">next></a>
+          <a href="?page={{ status_list.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+      </span>
+      </div>
+
+    {% for status in status_list %}
+      <div class="card mb-4">
+        <div class="card-header">
+          <dt class="col m-0 p-0">{{ status.tanggal|date:"d M Y P" }}</dt>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-2">Nama:</dt>
+            <dd class="col-sm-10">{{ status.nama.nama_user }}</dd>
+
+            <dt class="col-sm-2">Departemen:</dt>
+            <dd class="col-sm-10">{{ status.departemen }}</dd>
+          </dl>
+
+          <table class="table table-bordered mt-2">
+            <thead>
+              <tr>
+                <th>Nama Barang</th>
+                <th>Jumlah</th>
+                <th>Satuan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for barang in status.tbambilbarangket_set.all %}
+                <tr>
+                  <td>{{ barang.nama_barang }}</td>
+                  <td>{{ barang.jumlah }}</td>
+                  <td>{{ barang.satuan }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <dl class="mt-2 mb-0 row border">
+            <dt class="col-sm-2">Keterangan:</dt>
+            <dd class="col-sm-10 ">{{ status.keterangan_pengambil }}</dd>
+          </dl>
+
+          <dl class="mt-2 mb-0 row border">
+            <dt class="col-sm-2">Keterangan:</dt>
+            <dd class="col-sm-10 ">{{ status.keterangan_admin }}</dd>
+          </dl>
+
+          <div class="mt-2 mb-0 row border">
+            <div class="col-sm-6">
+              {% if status.gambar_serah %}
+                <dl>
+                  <dt>Gambar Serah:</dt>
+                  <dd>
+                    <!-- Mengatur lebar gambar menjadi 300px (sesuaikan dengan kebutuhan Anda) -->
+                    <img src="{{ status.gambar_serah }}" alt="Gambar Serah" style="max-height: 200px; width: auto;">
+                  </dd>
+                </dl>
+              {% endif %}
+            </div>
+          
+            <div class="col-sm-6">
+              {% if status.gambar_dokum %}
+                <dl>
+                  <dt>Gambar Dokum:</dt>
+                  <dd>
+                    <img src="{{ status.gambar_dokum }}" alt="Gambar Dokumen" style="max-height: 200px; width: auto;">
+                  </dd>
+                </dl>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if user_info.jabatan == 'Admin' %}
+          <form method="post" action="{% url 'statusambilbarang' %}" enctype="multipart/form-data" class="row">
+            {% csrf_token %}
+            <input type="hidden" name="no_ambil" value="{{ status.no_ambil }}">
+        
+            <!-- Kolom pertama -->
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="gambar_dokum">Upload Gambar Dokum:</label>
+                <input type="file" class="form-control-file" name="gambar_dokum" accept="image/*">
+              </div>
+            </div>
+      
+            <!-- Kolom kedua -->
+            <div class="col-md-9">
+              <div class="form-group">
+                <label for="keterangan_admin">Keterangan Admin:</label>
+                <textarea class="form-control" name="keterangan_admin" rows="1" placeholder="Masukkan keterangan"></textarea>
+              </div>
+            </div>
+        
+            <!-- Tombol submit gambar dokum -->
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary">Unggah Gambar Dokum</button>
+            </div>
+          </form>
+        {% endif %}               
+        </div>
+      </div>
+    {% endfor %}
+       <!-- Tambahkan pagination di bagian bawah -->
+
+      
+        <div class="pagination-box d-flex justify-content-center">
+          {% for page_num in status_list.paginator.page_range %}
+            <a href="?page={{ page_num }}" class="{% if status_list.number == page_num %}active{% endif %}">
+              {{ page_num }}
+            </a>
+          {% endfor %}
+        </div>
+                       
+  </div>
+{% endblock %}
